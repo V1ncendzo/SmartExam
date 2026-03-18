@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartExam VSTEP Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header bar -->
+    <header class="app-header">
+        <div class="header-logo">SmartExam</div>
+        <div class="header-controls">
+            <span id="user-display" class="hidden"></span>
+            <button id="logout-btn" class="btn btn-outline hidden">Logout</button>
+        </div>
+    </header>
+
+    <main class="app-container">
+        
+        <!-- Login View -->
+        <section id="login-view" class="view-section active">
+            <div class="card auth-card">
+                <h2>Welcome to SmartExam</h2>
+                <p class="subtitle">Log in to take your VSTEP test</p>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required placeholder="admin">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="••••••••">
+                    </div>
+                    <div id="login-error" class="error-msg hidden">Invalid credentials. Please try again.</div>
+                    <button type="submit" class="btn btn-primary w-100 mt-4">Login</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Dashboard View -->
+        <section id="dashboard-view" class="view-section hidden">
+            <div class="dashboard-header">
+                <h2>Available Exams</h2>
+                <p>Select an exam to begin your assessment.</p>
+            </div>
+            <div id="exams-container" class="exams-grid">
+                <!-- Exam cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- Active Exam View -->
+        <section id="exam-view" class="view-section hidden">
+            <div class="exam-layout">
+                <aside class="exam-sidebar">
+                    <h3 id="exam-title-display">VSTEP Exam</h3>
+                    
+                    <div class="timer-widget">
+                        <div class="timer-label">Time Remaining</div>
+                        <div id="countdown-display" class="timer-value">00:00:00</div>
+                    </div>
+
+                    <nav id="section-nav" class="section-nav">
+                        <!-- Sections injected here -->
+                    </nav>
+
+                    <button id="submit-exam-btn" class="btn btn-danger w-100 mt-4">Finish Exam</button>
+                </aside>
+                
+                <div class="exam-content">
+                    <div id="active-section-header" class="section-header">
+                        <h2 id="section-title">Loading Section...</h2>
+                    </div>
+
+                    <div id="question-container" class="question-stream">
+                        <!-- Parts and Questions injected here -->
+                    </div>
+
+                    <div class="section-footer">
+                        <button id="submit-section-btn" class="btn btn-primary">Submit Section & Continue</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal Overlay -->
+    <div id="custom-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="modal-title">Confirm Action</h3>
+            <p id="modal-message">Are you sure?</p>
+            <div class="modal-actions">
+                <button id="modal-cancel-btn" class="btn btn-outline">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

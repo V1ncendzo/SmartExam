@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Question Management Dashboard</h2>
+    <p>Welcome, {{ request.user.first_name }}!</p>
+
+    <!-- Example of Template Logic for Role-Based Access Control -->
+    
+    <div class="actions">
+        {% if request.user.role == 'ADMIN' %}
+            <div class="alert alert-danger">
+                <strong>Admin Controls:</strong>
+                <a href="{% url 'admin:core_user_changelist' %}" class="btn btn-danger">Manage Users</a>
+                <a href="{% url 'admin:core_exam_changelist' %}" class="btn btn-danger">System Exams</a>
+            </div>
+        {% endif %}
+
+        {% if request.user.role in 'ADMIN,TEACHER' %}
+            <div class="alert alert-info">
+                <strong>Teacher Controls:</strong>
+                <button class="btn btn-primary">Create New Question</button>
+                <button class="btn btn-secondary">Edit Exam Settings</button>
+            </div>
+        {% endif %}
+
+        {% if request.user.role == 'STUDENT' %}
+            <div class="alert alert-success">
+                <strong>Student Dashboard:</strong>
+                <p>You are viewing your personal exams.</p>
+                <!-- Students do not see 'Edit' or 'Create' buttons -->
+            </div>
+        {% endif %}
+    </div>
+
+    <hr>
+    
+    <!-- Rendering a theoretical list of questions -->
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Question 1: What is the capital of France?
+            
+            <!-- Hide "Edit" button if the user is merely a STUDENT -->
+            {% if request.user.role != 'STUDENT' %}
+                <button class="btn btn-sm btn-outline-primary">Edit</button>
+            {% endif %}
+        </li>
+    </ul>
+
+</div>
+{% endblock %}
