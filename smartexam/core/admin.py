@@ -116,3 +116,9 @@ class TeacherResponseAdmin(admin.ModelAdmin):
     def get_user(self, obj):
         return obj.section_submission.exam_submission.user.username
     get_user.short_description = 'Student'
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        from .services import aggregate_section_score
+        if obj.is_graded:
+            aggregate_section_score(obj.section_submission)

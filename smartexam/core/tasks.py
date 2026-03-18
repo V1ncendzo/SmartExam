@@ -29,32 +29,29 @@ def process_subjective_grading(section_submission_id):
             word_count = len(response.text_answer.split())
             response.word_count = word_count
             
-            # Simple AI mock check: Provide some marks if word count > 50
+            # Simple AI mock check: Provide some AI suggestions instead of grading
             if word_count > 50:
-                response.marks_awarded = response.question.marks * 0.8  # 80% score
-                response.ai_feedback = {"fluency": 0.8, "grammar": 0.7, "comments": "Good length, some grammar issues."}
+                response.ai_evaluation_data = {"fluency": 0.8, "grammar": 0.7, "comments": "Good length, some grammar issues."}
+            elif word_count > 0:
+                response.ai_evaluation_data = {"fluency": 0.3, "grammar": 0.4, "comments": "Too short."}
             else:
-                response.marks_awarded = response.question.marks * 0.3
-                response.ai_feedback = {"fluency": 0.3, "grammar": 0.4, "comments": "Too short."}
+                response.ai_evaluation_data = {"error": "No answer provided"}
                 
-            response.is_graded = True
+            response.status = 'GRADING'
             response.save()
-            logger.info(f"Graded TEXT_LONG question for submission {section_submission_id}")
+            logger.info(f"AI processed TEXT_LONG question for submission {section_submission_id}")
 
         # 2. 'AUDIO_REC' Evaluation
         elif response.question.question_type == 'AUDIO_REC':
             if response.audio_file:
                 # In production: Check file length via ffmpeg, send to Whisper API, etc.
-                response.marks_awarded = response.question.marks * 0.9
-                response.ai_feedback = {"pronunciation": 0.9, "clarity": 0.8}
+                response.ai_evaluation_data = {"pronunciation": 0.9, "clarity": 0.8}
             else:
-                response.marks_awarded = 0.0
-                response.ai_feedback = {"error": "No audio file provided"}
+                response.ai_evaluation_data = {"error": "No audio file provided"}
                 
-            response.is_graded = True
+            response.status = 'GRADING'
             response.save()
-            logger.info(f"Graded AUDIO_REC question for submission {section_submission_id}")
+            logger.info(f"AI processed AUDIO_REC question for submission {section_submission_id}")
 
-    # After grading subjective answers, finally aggregate the overall section score
-    from .services import aggregate_section_score
-    aggregate_section_score(submission)
+    # Subjective answers are NOT fully graded yet. They wait for an Expert in the Dashboard!
+    # Therefore, we do NOT call aggregate_section_score here anymore.

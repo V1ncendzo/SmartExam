@@ -26,6 +26,30 @@ def score_objective_response(teacher_response: TeacherResponse):
     teacher_response.save()
 
 
+def check_and_complete_exam(exam_submission):
+    """
+    Checks if all responses in the exam are fully graded.
+    If so, transitions the ExamSubmission from GRADING to COMPLETED.
+    """
+    if exam_submission.status in ['COMPLETED', 'IN_PROGRESS']:
+        return
+
+    # Check for any ungraded subjective responses
+    ungraded_responses_exist = TeacherResponse.objects.filter(
+        section_submission__exam_submission=exam_submission,
+        is_graded=False
+    ).exists()
+
+    if not ungraded_responses_exist:
+        total_score = exam_submission.section_submissions.aggregate(
+            total=Sum('score')
+        )['total'] or 0.0
+        
+        exam_submission.consolidated_score = total_score
+        exam_submission.status = 'COMPLETED'
+        exam_submission.save()
+
+
 def aggregate_section_score(section_submission: SectionSubmission):
     """
     Calculates the total score for a section once all questions are graded.
@@ -42,6 +66,9 @@ def aggregate_section_score(section_submission: SectionSubmission):
         
         section_submission.score = total_marks
         section_submission.save()
+        
+        # Check if the overall exam is now fully graded
+        check_and_complete_exam(section_submission.exam_submission)
         return True
     
     return False
@@ -54,6 +81,17 @@ def submit_section(section_submission: SectionSubmission):
     2. Dispatches asynchronous Celery tasks for subjective marking (Writing/Speaking).
     """
     from .tasks import process_subjective_grading  # Late import to prevent circular dependency
+    
+    # 1. Ensure all questions in this section have a TeacherResponse (even if blank)
+    questions = Question.objects.filter(part__section=section_submission.section)
+    existing_q_ids = section_submission.responses.values_list('question_id', flat=True)
+    missing_qs = questions.exclude(id__in=existing_q_ids)
+    
+    if missing_qs.exists():
+        TeacherResponse.objects.bulk_create([
+            TeacherResponse(section_submission=section_submission, question=q)
+            for q in missing_qs
+        ])
     
     responses = section_submission.responses.all()
     has_subjective_questions = False

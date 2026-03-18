@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grade Candidate Response</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .pane { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 2rem; height: 100%; }
+        .response-text { font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap; background: #fdfdfd; border: 1px solid #eee; padding: 1.5rem; border-radius: 6px; }
+    </style>
+</head>
+<body>
+<div class="container-fluid py-4">
+    <div class="row mb-3 px-3">
+        <div class="col d-flex justify-content-between align-items-center">
+            <h4>Candidate ID: <span class="text-muted font-monospace">{{ response.section_submission.exam_submission.user.id }}</span></h4>
+            <a href="{% url 'examiner_dashboard' %}" class="btn btn-outline-secondary">← Back to Queue</a>
+        </div>
+    </div>
+
+    <div class="row g-4 px-3">
+        <!-- Left Pane: Candidate Response -->
+        <div class="col-lg-6">
+            <div class="pane d-flex flex-column">
+                <h5 class="mb-3 border-bottom pb-2">Candidate Response ({{ response.question.get_question_type_display }})</h5>
+                
+                <div class="mb-4">
+                    <strong>Prompt:</strong>
+                    <div class="mt-2 text-muted">{{ response.question.prompt }}</div>
+                </div>
+
+                <div>
+                    <strong>Answer:</strong>
+                    <div class="mt-2">
+                        {% if response.question.question_type == 'TEXT_LONG' %}
+                            <div class="response-text">{{ response.text_answer }}</div>
+                            <small class="text-muted d-block mt-2">Word count: {{ response.word_count }}</small>
+                        {% elif response.question.question_type == 'AUDIO_REC' %}
+                            {% if response.audio_file %}
+                                <audio controls class="w-100 mt-2">
+                                    <source src="{{ response.audio_file.url }}" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            {% else %}
+                                <div class="alert alert-warning">No audio file submitted.</div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- AI Suggestions Toggle -->
+                <div class="mt-auto pt-4">
+                    <button class="btn btn-sm btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#aiSuggestions" aria-expanded="false" aria-controls="aiSuggestions">
+                        Show AI Evaluation Suggestions
+                    </button>
+                    <div class="collapse mt-3" id="aiSuggestions">
+                        <div class="card card-body bg-light">
+                            {% if response.ai_evaluation_data or response.ai_feedback %}
+                                <pre class="mb-0" style="font-size: 0.85rem;">{{ response.ai_evaluation_data|default:response.ai_feedback|pprint }}</pre>
+                            {% else %}
+                                <em class="text-muted">No AI evaluation data available string.</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Pane: Grading Form -->
+        <div class="col-lg-6">
+            <div class="pane">
+                <h5 class="mb-4 border-bottom pb-2">Expert Grading Form</h5>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Task Fulfillment (0-10)</label>
+                            <input type="number" step="0.5" min="0" max="10" name="task_fulfillment_score" class="form-control form-control-lg text-center" value="{{ response.task_fulfillment_score|stringformat:'s' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Coherence (0-10)</label>
+                            <input type="number" step="0.5" min="0" max="10" name="coherence_score" class="form-control form-control-lg text-center" value="{{ response.coherence_score|stringformat:'s' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Vocabulary (0-10)</label>
+                            <input type="number" step="0.5" min="0" max="10" name="vocabulary_score" class="form-control form-control-lg text-center" value="{{ response.vocabulary_score|stringformat:'s' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Grammar (0-10)</label>
+                            <input type="number" step="0.5" min="0" max="10" name="grammar_score" class="form-control form-control-lg text-center" value="{{ response.grammar_score|stringformat:'s' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">General Feedback</label>
+                        <textarea name="general_feedback" class="form-control" rows="4" placeholder="Enter specific constructive feedback here...">{{ response.general_feedback }}</textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Submit Final Grade</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -4,7 +4,8 @@ const API_BASE = 'http://localhost/api/v1';
 const views = {
     login: document.getElementById('login-view'),
     dashboard: document.getElementById('dashboard-view'),
-    exam: document.getElementById('exam-view')
+    exam: document.getElementById('exam-view'),
+    breakdown: document.getElementById('breakdown-view')
 };
 
 const state = {
@@ -151,8 +152,17 @@ async function fetchExams() {
             let actionHtml = `<button class="btn btn-outline w-100" onclick="startExam('${exam.id}')">Start Exam</button>`;
             
             if (isCompleted) {
-                let statusText = submission.status === 'COMPLETED' ? `Score: ${submission.consolidated_score || 0}/10` : 'Grading in progress...';
-                actionHtml = `<div class="completion-status text-muted text-center w-100 mt-4">${statusText}</div>`;
+                if (submission.status === 'COMPLETED') {
+                    actionHtml = `
+                        <div class="w-100 mt-auto pt-3">
+                            <button class="btn btn-primary w-100" style="background-color: #10b981;" onclick="showScoreBreakdown('${submission.id}')">
+                                View Final Score
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `<div class="completion-status text-muted text-center w-100 mt-auto pt-4 fw-bold">Grading in progress...</div>`;
+                }
             }
 
             card.innerHTML = `
@@ -399,7 +409,7 @@ document.getElementById('submit-exam-btn').addEventListener('click', () => {
 function showModal(title, message, isConfirm = false, onConfirm = null) {
     const overlay = document.getElementById('custom-modal');
     document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-message').textContent = message;
+    document.getElementById('modal-message').innerHTML = message;
     
     const cancelBtn = document.getElementById('modal-cancel-btn');
     const confirmBtn = document.getElementById('modal-confirm-btn');
@@ -427,6 +437,36 @@ function showModal(title, message, isConfirm = false, onConfirm = null) {
     });
     
     overlay.classList.remove('hidden');
+}
+
+// Score Breakdown Logic
+async function showScoreBreakdown(submissionId) {
+    try {
+        const res = await apiFetch(`/submissions/${submissionId}/`);
+        if (!res.ok) throw new Error('Failed to fetch details');
+        const submission = await res.json();
+        
+        document.getElementById('breakdown-total-score').textContent = `${(parseFloat(submission.consolidated_score) || 0).toFixed(2)} / 10`;
+        
+        const grid = document.getElementById('breakdown-grid-container');
+        grid.innerHTML = '';
+        
+        if (submission.section_submissions) {
+            submission.section_submissions.forEach(ss => {
+                grid.innerHTML += `
+                    <div class="score-cell">
+                        <div class="score-cell-title">${ss.section_type || 'Section'}</div>
+                        <div class="score-cell-value">${ss.score !== null ? parseFloat(ss.score).toFixed(2) : '0.00'}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        showView('breakdown');
+    } catch (e) {
+        console.error("Failed to load breakdown", e);
+        showModal('Error', 'Could not load score breakdown details.');
+    }
 }
 
 // Initialize app when DOM is fully loaded

@@ -56,35 +56,17 @@ class ExamDetailSerializer(serializers.ModelSerializer):
 class TeacherResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherResponse
-        fields = ['id', 'question', 'selected_choice', 'text_answer', 'audio_file', 'is_graded']
+        fields = ['id', 'section_submission', 'question', 'selected_choice', 'text_answer', 'audio_file', 'is_graded']
         read_only_fields = ['is_graded', 'marks_awarded', 'grader_comments', 'ai_feedback']
-
-    def validate(self, data):
-        """
-        Ensure the response data matches the question type.
-        """
-        question = data.get('question')
-        if not question:
-            return data
-            
-        if question.question_type in ['MCQ', 'TFNG', 'MATCHING'] and not data.get('selected_choice'):
-            raise serializers.ValidationError("An objective question must have a selected_choice.")
-            
-        if question.question_type == 'TEXT_LONG' and not data.get('text_answer'):
-            raise serializers.ValidationError("A writing task must have a text_answer.")
-            
-        if question.question_type == 'AUDIO_REC' and not data.get('audio_file'):
-            raise serializers.ValidationError("A speaking task must have an attached audio_file.")
-            
-        return data
 
 
 class SectionSubmissionSerializer(serializers.ModelSerializer):
+    section_type = serializers.CharField(source='section.section_type', read_only=True)
     responses = TeacherResponseSerializer(many=True, read_only=True)
 
     class Meta:
         model = SectionSubmission
-        fields = ['id', 'section', 'start_time', 'time_spent_seconds', 'is_completed', 'responses']
+        fields = ['id', 'section', 'section_type', 'start_time', 'time_spent_seconds', 'is_completed', 'score', 'responses']
         read_only_fields = ['start_time', 'time_spent_seconds', 'is_completed', 'score']
 
 

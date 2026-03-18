@@ -154,9 +154,17 @@ class SectionSubmission(models.Model):
 
 class TeacherResponse(models.Model):
     """Granular responses for every question/task in VSTEP."""
+    STATUS_CHOICES = [
+        ('PENDING', 'Just submitted'),
+        ('GRADING', 'In progress'),
+        ('COMPLETED', 'Graded'),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     section_submission = models.ForeignKey(SectionSubmission, related_name='responses', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    
+    # Validation status for this specific response
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
     
     # 1. Listening / Reading Object Answers (MCQ, TFNG)
     selected_choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.SET_NULL)
@@ -171,12 +179,23 @@ class TeacherResponse(models.Model):
     # Grading metadata (for Writing/Speaking queued logic)
     is_graded = models.BooleanField(default=False, help_text="Becomes True once AI or Human grades it")
     marks_awarded = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
-    grader_comments = models.TextField(blank=True)
+    
+    # Detailed VSTEP Criteria (Out of 10)
+    task_fulfillment_score = models.DecimalField(max_digits=4, decimal_places=2, default=0.0)
+    coherence_score = models.DecimalField(max_digits=4, decimal_places=2, default=0.0)
+    vocabulary_score = models.DecimalField(max_digits=4, decimal_places=2, default=0.0)
+    grammar_score = models.DecimalField(max_digits=4, decimal_places=2, default=0.0)
+    
+    general_feedback = models.TextField(blank=True)
+    grader_comments = models.TextField(blank=True) # Legacy for backward compatibility
+    
     ai_feedback = models.JSONField(null=True, blank=True, help_text="Stores grammar/fluency metrics from AI agent")
+    ai_evaluation_data = models.JSONField(null=True, blank=True, help_text="Detailed AI analysis (errors, suggestions, etc)")
 
     class Meta:
         unique_together = ('section_submission', 'question')
         # Optimization: Used heavily by Celery workers querying for ungraded records
         indexes = [
+            models.Index(fields=['status']),
             models.Index(fields=['is_graded', 'question']),
         ]

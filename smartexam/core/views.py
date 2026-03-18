@@ -82,8 +82,9 @@ class ExamSubmissionViewSet(viewsets.ModelViewSet):
         exam_submission.end_time = timezone.now()
         exam_submission.save()
         
-        # Check if all sectons are graded synchronously, if so mark COMPLETED
-        # (For VSTEP, normally Writing/Speaking keeps it in GRADING state).
+        # Check if all sections are graded synchronously, if so mark COMPLETED
+        from .services import check_and_complete_exam
+        check_and_complete_exam(exam_submission)
         
         return Response({"status": "Exam finished safely and queued for grading."})
 

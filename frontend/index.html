@@ -85,6 +85,26 @@
             </div>
         </section>
 
+        <!-- Breakdown View -->
+        <section id="breakdown-view" class="view-section hidden">
+            <button class="btn btn-outline back-btn" onclick="showView('dashboard'); fetchExams();">← Back to Dashboard</button>
+            <div class="dashboard-header">
+                <h2>Score Breakdown</h2>
+                <p>Detailed performance analytics for your exam.</p>
+            </div>
+            
+            <div class="card">
+                <div style="text-align: center; margin-bottom: 2.5rem;">
+                    <h3 style="color: var(--text-muted); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Overall Result</h3>
+                    <div id="breakdown-total-score" style="font-size: 3.5rem; font-weight: 700; color: var(--text-main); margin-top: 0.5rem;">0.00 / 10</div>
+                </div>
+                
+                <div id="breakdown-grid-container" class="score-breakdown-grid">
+                    <!-- Dynamic Cells Injected Here -->
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Custom Modal Overlay -->
