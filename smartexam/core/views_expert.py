@@ -11,7 +11,7 @@ def examiner_dashboard(request):
     for TEXT_LONG and AUDIO_REC.
     """
     pending_responses = TeacherResponse.objects.filter(
-        status__in=['PENDING', 'GRADING'],
+        status__in=['PENDING', 'AI_PROCESSING', 'READY_FOR_GRADING'],
         question__question_type__in=['TEXT_LONG', 'AUDIO_REC']
     ).select_related('question__part', 'section_submission__exam_submission__user').order_by('status', 'section_submission__start_time')
 

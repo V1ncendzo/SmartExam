@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework_nested import routers
 from .views import (
-    ExamViewSet, ExamSubmissionViewSet, SectionSubmissionViewSet, TeacherResponseViewSet
+    ExamViewSet, ExamSubmissionViewSet, SectionSubmissionViewSet, TeacherResponseViewSet,
+    GetAIFeedbackView
 )
 
 router = routers.DefaultRouter()
@@ -13,4 +14,5 @@ router.register(r'responses', TeacherResponseViewSet, basename='teacher-response
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('get-ai-feedback/<uuid:pk>/', GetAIFeedbackView.as_view(), name='get_ai_feedback'),
 ]

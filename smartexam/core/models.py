@@ -156,15 +156,15 @@ class TeacherResponse(models.Model):
     """Granular responses for every question/task in VSTEP."""
     STATUS_CHOICES = [
         ('PENDING', 'Just submitted'),
-        ('GRADING', 'In progress'),
+        ('AI_PROCESSING', 'AI Processing'),
+        ('READY_FOR_GRADING', 'Ready for Grading'),
         ('COMPLETED', 'Graded'),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     section_submission = models.ForeignKey(SectionSubmission, related_name='responses', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     
-    # Validation status for this specific response
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     
     # 1. Listening / Reading Object Answers (MCQ, TFNG)
     selected_choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.SET_NULL)

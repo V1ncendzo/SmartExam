@@ -3,6 +3,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
 from .models import (
     Exam, ExamSubmission, SectionSubmission, TeacherResponse, Section
@@ -156,3 +158,22 @@ class TeacherResponseViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
             
         return super().create(request, *args, **kwargs)
+
+class GetAIFeedbackView(APIView):
+    """
+    Returns the AI evaluation payload for a specific response.
+    Accessible only to EXAMINER role.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        if request.user.role != 'EXAMINER' and not request.user.is_superuser:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            
+        response_obj = get_object_or_404(TeacherResponse, pk=pk)
+        
+        return Response({
+            "status": response_obj.status,
+            "ai_evaluation_data": response_obj.ai_evaluation_data
+        })
+
